@@ -8,7 +8,10 @@ const allWindowsRaw = await $`yabai -m query --windows --space`;
 const allWindows: any[] = JSON.parse(allWindowsRaw.stdout);
 
 const relevantWindows = allWindows
-  .filter(window => !['Microsoft Teams Notification', 'Rewatch'].includes(window.title));
+  // Microsoft Teams notifications and Rewatch are invisible, no sense in cycling through them
+  .filter(window => !['Microsoft Teams Notification', 'Rewatch'].includes(window.title))
+  // OBS is just for streaming, and I don't want to cycle through it while streaming, so it is ignored as well.
+  .filter(window => !['OBS Studio'].includes(window.app));
 
 const focusedWindowIndex = relevantWindows
   .sort((a, b) => a.id - b.id)
