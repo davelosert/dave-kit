@@ -25,9 +25,11 @@ if(mode === 'laptop') {
   const allWindowsRaw = await $`yabai -m query --windows`;
   const allWindows = JSON.parse(allWindowsRaw.stdout);
   
-  await Promise.all(allWindows.map((window) => {
-    return $`yabai -m window ${window.id} --grid 1:1:0:0:0:0`;
-  }));
+  for(const window of allWindows) {
+    await $`yabai -m window ${window.id} --grid 1:1:0:0:0:0`.catch(err => {
+      console.log(`Error on window ${window.title}`, err);
+    });
+  }
 }
 
 if(mode === 'monitor') {
