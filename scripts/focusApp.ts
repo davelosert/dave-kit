@@ -2,12 +2,10 @@
 // Description: Use yabai to search and focus a app given
 // Author: David Losert
 import "@johnlindquist/kit";
+import { yabai } from "../lib/yabai";
 
 const appName = await arg();
-console.log(`App name: ${appName}`);
-
-const allWindowsRaw = await $`yabai -m query --windows`;
-const allWindows = JSON.parse(allWindowsRaw.stdout);
+const allWindows = await yabai.getAllWindows();
 
 const foundWindows = allWindows.filter(({ app }) => (app === appName));
 

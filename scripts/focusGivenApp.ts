@@ -3,9 +3,9 @@
 // Author: David Losert
 // Shortcut: shift option f
 import "@johnlindquist/kit";
+import { yabai } from "../lib/yabai";
 
-const allWindowsRaw = await $`yabai -m query --windows`;
-const allWindows = JSON.parse(allWindowsRaw.stdout);
+const allWindows = await yabai.getAllWindows();
 
 const selectedWindow = await arg('Select Window to open', allWindows.map(({ id, app, title }) => ({
   name: `${app} - ${title}`,

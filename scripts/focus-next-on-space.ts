@@ -3,9 +3,9 @@
 // Author: David Losert
 // Shortcut: shift option n
 import "@johnlindquist/kit";
+import { yabai } from '../lib/yabai';
 
-const allWindowsRaw = await $`yabai -m query --windows --space`;
-const allWindows: any[] = JSON.parse(allWindowsRaw.stdout);
+const allWindows = await yabai.getAllWindows();
 
 const relevantWindows = allWindows
   // Microsoft Teams notifications and Rewatch are invisible, no sense in cycling through them
