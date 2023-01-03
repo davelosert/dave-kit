@@ -5,7 +5,7 @@
 import "@johnlindquist/kit";
 import { yabai } from '../lib/yabai';
 
-const allWindows = await yabai.getAllWindows();
+const allWindows = await yabai.queryAllWindows();
 
 const relevantWindows = allWindows
   // Microsoft Teams notifications and Rewatch are invisible, no sense in cycling through them

@@ -7,7 +7,7 @@ import { yabai } from '../lib/yabai';
 // First make sure all windows are in floating mode
 await $`yabai -m space --layout float`;
 
-const allWindows = await yabai.getAllWindows();
+const allWindows = await yabai.queryAllWindows();
 
 // 2560×1440
 for(const window of allWindows) {

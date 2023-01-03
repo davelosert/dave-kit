@@ -23,7 +23,7 @@ const mode = await arg('Which Displaymode you want to select?', [
 if(mode === 'laptop') {
   await $`yabai -m config layout stack`;
 
-  const allWindows = await yabai.getAllWindows();
+  const allWindows = await yabai.queryAllWindows();
   
   for(const window of allWindows) {
     await $`yabai -m window ${window.id} --grid 1:1:0:0:0:0`.catch(err => {

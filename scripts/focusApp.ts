@@ -5,7 +5,7 @@ import "@johnlindquist/kit";
 import { yabai } from "../lib/yabai";
 
 const appName = await arg();
-const allWindows = await yabai.getAllWindows();
+const allWindows = await yabai.queryAllWindows();
 
 const foundWindows = allWindows.filter(({ app }) => (app === appName));
 
