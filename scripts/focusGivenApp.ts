@@ -1,7 +1,6 @@
-// Menu: [f]ocus app
+// Menu: focus app
 // Description: Use yabai to search and focus a running app
 // Author: David Losert
-// Shortcut: shift option f
 import "@johnlindquist/kit";
 import { yabai } from "../lib/yabai";
 
