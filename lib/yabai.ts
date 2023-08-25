@@ -27,6 +27,12 @@ async function queryAllWindows(): Promise<YabaiWindow[]> {
   return allWindows;
 }
 
+async function queryAllWindowsOnSpace(spaceIndex: number): Promise<YabaiWindow[]> {
+  const allWindowsRaw = await $`yabai -m query --windows --space ${spaceIndex}`;
+  const allWindows = JSON.parse(allWindowsRaw.stdout);
+  return allWindows;
+}
+
 async function queryAllSpaces(): Promise<YabaiSpace[]> {
   const allSpacesRaw = await $`yabai -m query --spaces`;
   const allSpaces = JSON.parse(allSpacesRaw.stdout);
@@ -39,6 +45,11 @@ async function queryAllDisplays(): Promise<YabaiDisplay[]> {
   return allDisplays;
 };
 
+async function queryCurrentSpace(): Promise<YabaiSpace> {
+  const allSpaces = await queryAllSpaces();
+  return allSpaces.find(({ 'has-focus': hasFocus }) => hasFocus);
+}
+
 async function findApp(appName: string, allWindows?: YabaiWindow[]): Promise<YabaiWindow> {
   const searchWindows = allWindows ?? await queryAllWindows();
   return searchWindows.find(({ app }) => (app === appName));
@@ -49,12 +60,32 @@ async function findFocusedWindow(allWindows?: YabaiWindow[]): Promise<YabaiWindo
   return searchWindows.find(({ 'has-focus': hasFocus }) => hasFocus);
 }
 
+async function moveWindowToSpaceIfExists(window: YabaiWindow, spaceIndex: number) {
+  try {
+    await $`yabai -m window ${window.id} --space ${spaceIndex}`;
+  } catch (e) {
+    console.warn(`Could not move window ${window.id} to space ${spaceIndex} due to error:`, e);
+  }
+}
+
+async function moveWindowToDisplayIfExists(window: YabaiWindow, displayIndex: number) {
+  try {
+    await $`yabai -m window ${window.id} --display ${displayIndex}`;
+  } catch (e) {
+    console.warn(`Could not move window ${window} to display ${displayIndex} due to error:`, e);
+  }
+}
+
 const yabai = {
   queryAllWindows,
+  queryAllWindowsOnSpace,
   queryAllSpaces,
   queryAllDisplays,
+  queryCurrentSpace,
   findApp,
   findFocusedWindow,
+  moveWindowToSpaceIfExists,
+  moveWindowToDisplayIfExists
 };
 
 export {
