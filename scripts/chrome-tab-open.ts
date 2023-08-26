@@ -4,8 +4,13 @@ import "@johnlindquist/kit"
 // Description: List all Chrome tabs. Then switch to that tab or copy with CMD + c
 // Author: John Lindquist
 // Twitter: @johnlindquist
+let currentTabs  = [];
 
-let currentTabs = await getTabs()
+try {
+  currentTabs = await getTabs()
+} catch (e) {
+  console.warn(`Warning: Couldn't load tabs due to error:`, e)
+}
 
 let bookmarks = await readFile(
   home(
@@ -25,8 +30,7 @@ const buildFolderItems = (prefixes, items): any[] => {
       newItems.push({
         name: bookmarkItem.name,
         value: bookmarkItem.url,
-        // preview: bookmarkItem.url,
-        description: `${prefixes.join('/')}/${bookmarkItem.name}\n${bookmarkItem.url}`
+        description: `${bookmarkItem.url}`,
       });
     }
   }
@@ -36,18 +40,20 @@ const buildFolderItems = (prefixes, items): any[] => {
 
 let bookmarkChoices = buildFolderItems([], initialItems);
 
-let currentOpenChoices = currentTabs.map(
-  ({ url, title }) => ({
-    name: url,
-    value: url,
-    description: title,
-    preview: url
-  })
-)
+// let currentOpenChoices = currentTabs.map(
+//   ({ url, title }) => {
+//     return ({
+//       name: url,
+//       value: url,
+//       description: title,
+//       preview: url
+//     });
+//   }
+// )
 
 const bookmarksAndOpen = [
   ...bookmarkChoices,
-  ...currentOpenChoices,
+  // ...currentOpenChoices,
 ]
 const choices = _.uniqBy(bookmarksAndOpen, "name")
 
