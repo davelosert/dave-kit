@@ -1,4 +1,4 @@
-// Menu: Set Recording Size
+// Menu: Set [R]cording Size
 // Description: Use yabai to set a good size for all windows on the current space to start a video recording or screen sharing
 // Author: David Losert
 import "@johnlindquist/kit";
