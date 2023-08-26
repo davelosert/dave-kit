@@ -46,13 +46,31 @@ async function putWindowsVerticallyOnSpace(windows: YabaiWindow[], space: YabaiS
     // Overwrite the space information to get the most recent information
     space = await yabai.querySpace(space.index);
   }
+  
+  // Nothing more to do if there is only that one window
+  if(windows.length === 1) return;
 
   const isFirstWindow = space['first-window'] === existingWindows[0].id;
   if(!isFirstWindow) {
     await yabai.swapWindows(existingWindows[0].id, space['first-window']);
   }
   
+  // First ensure all windows are splite vertically
+  for(const window of existingWindows) {
+    if(window['split-type'] !== 'vertical') {
+      await yabai.toggleSplit(window); 
+    }
+  }
   
+  // Sort the windows by their x position
+  const sortedWindows = existingWindows.sort((a, b) => a.frame.x - b.frame.x);
+  
+  // Only continue if the windows are not in the correct order already
+  const cont = sortedWindows.some((window, index) => window.id !== existingWindows[index].id);
+  if(!cont) return;
+    
+  
+
   for(let i = 1; i < existingWindows.length; i++) {
     const previousWindow = existingWindows[i-1];
     const currentWindow = existingWindows[i];

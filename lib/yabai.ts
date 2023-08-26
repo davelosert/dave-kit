@@ -3,6 +3,13 @@ type YabaiWindow = {
   app: string;
   title: string;
   'has-focus': boolean;
+  'split-type': 'vertical' | 'horizontal' | 'none';
+  frame: {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+  }
 }
 
 type YabaiSpace = {
@@ -120,6 +127,14 @@ async function swapWindows(windowIndexA: number, windowIndexB: number) {
   }
 }
 
+async function toggleSplit(window: YabaiWindow) {
+  try {
+    await $`yabai -m window ${window.id} --toggle split`;
+  } catch (e) {
+    console.warn(`Could not toggle split for window ${window.id} due to error:`, e);
+  }
+}
+
 async function ensureSpaceLayout(space: YabaiSpace, layout: 'bsp' | 'float' | 'stack') {
   if(space.type === layout) return;
 
@@ -144,6 +159,7 @@ const yabai = {
   moveWindowToDisplayIfExists,
   ensureSpaceLayout,
   setInsert,
+  toggleSplit,
   swapWindows,
   warpWindow
 };
