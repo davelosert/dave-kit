@@ -1,5 +1,6 @@
 import "@johnlindquist/kit"
-    
+import _ from "lodash"
+
 // Menu: [c] Open Chrome Tab
 // Description: List all Chrome tabs. Then switch to that tab or copy with CMD + c
 // Author: John Lindquist
