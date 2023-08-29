@@ -4,6 +4,7 @@
 import "@johnlindquist/kit";
 import { yabai, YabaiWindow, YabaiSpace } from '../lib/yabai';
 
+
 const mode = await arg('Select Window Definition Scheme', [
   {
     name: '[w]ork',
@@ -21,7 +22,7 @@ const mode = await arg('Select Window Definition Scheme', [
 
 const remainingWindows = await yabai.queryAllWindows();
 
-const findWindowAndMarkManaged = (query): YabaiWindow | null => {
+function findWindowAndMarkManaged (query): YabaiWindow | null {
   const windowIndex = remainingWindows.findIndex(window => {
     let appMatch = query.app ? false : true;
     let titleMatch = query.title ? false : true;
@@ -37,6 +38,36 @@ const findWindowAndMarkManaged = (query): YabaiWindow | null => {
   return remainingWindows.splice(windowIndex, 1)[0];
 }
 
+async function applySizeRatioToWindows(windows: YabaiWindow[], ratios: number[]) {
+  if(windows.length !== ratios.length) {
+    throw new Error('The number of windows and ratios must match');
+  }
+  
+  const totalRatio = ratios.reduce((acc, ratio) => acc + ratio, 0);
+  if(totalRatio !== 1) {
+    throw new Error('The ratios must add up to 1');
+  }
+
+  const totalWidth = windows.reduce((sum, nextWindow) => sum + nextWindow.frame.w, 0);
+
+  for(let [index, window] of windows.entries()) {
+    if(index === windows.length - 1) {
+      // The last window should take up the rest of the space
+      break;
+    }
+
+    if(index !== 0) {
+      // Refetch the current window to get the most recent width after altering the first window
+      window = await yabai.queryWindow(window);
+    }
+
+    const ratio = ratios.shift();
+    const targetWidth = (totalWidth * ratio) - window.frame.w;
+    await yabai.resizeWindow(window, `right:${targetWidth}:0`);
+  }
+
+}
+
 async function putWindowsVerticallyOnSpace(windows: YabaiWindow[], space: YabaiSpace) {
   const existingWindows = windows.filter(window => Boolean(window));
   const isFirstWindowOnSpace = space.windows.includes(existingWindows[0].id);
@@ -47,6 +78,7 @@ async function putWindowsVerticallyOnSpace(windows: YabaiWindow[], space: YabaiS
     space = await yabai.querySpace(space.index);
   }
   
+  
   // Nothing more to do if there is only that one window
   if(windows.length === 1) return;
 
@@ -55,10 +87,19 @@ async function putWindowsVerticallyOnSpace(windows: YabaiWindow[], space: YabaiS
     await yabai.swapWindows(existingWindows[0].id, space['first-window']);
   }
   
+  
+  let splitToggled = false;
   // First ensure all windows are splite vertically
-  for(const window of existingWindows) {
+  for(let window of existingWindows) {
+    // Refresh the window information as, after a previous toggle, the split-type might be wrong
+    if(splitToggled) {
+      window = await yabai.queryWindow(window);
+    }
+
     if(window['split-type'] !== 'vertical') {
+      console.log(`Splitting ${window.app} vertically`);
       await yabai.toggleSplit(window); 
+      splitToggled = true;
     }
   }
   
@@ -68,19 +109,19 @@ async function putWindowsVerticallyOnSpace(windows: YabaiWindow[], space: YabaiS
   // Only continue if the windows are not in the correct order already
   const cont = sortedWindows.some((window, index) => window.id !== existingWindows[index].id);
   if(!cont) return;
-    
-  
 
   for(let i = 1; i < existingWindows.length; i++) {
     const previousWindow = existingWindows[i-1];
     const currentWindow = existingWindows[i];
+    console.log(`Moving ${currentWindow.app} to the right of ${previousWindow.app}`);
     await yabai.setInsert(previousWindow, 'east');
+    await wait(1000);
     await yabai.warpWindow(previousWindow, currentWindow);
   }
 }
 
 const spaces = await yabai.queryAllSpaces();
-const  slack = findWindowAndMarkManaged({ app: 'Slack'}),
+const slack = findWindowAndMarkManaged({ app: 'Slack'}),
   chrome = findWindowAndMarkManaged({ app: 'Google Chrome'}),
   code = findWindowAndMarkManaged({ app: 'Code'}),
   outlook = findWindowAndMarkManaged({ app: 'Microsoft Outlook'}),
@@ -130,11 +171,12 @@ if(mode === 'code') {
   await putWindowsVerticallyOnSpace([outlook, teams, signal, discord], spaces[1]);
   
   // MOVE SPOTIOFY TO SECOND LAST SPACE
+  await yabai.ensureSpaceLayout(spaces.at(-2), 'bsp')
   await putWindowsVerticallyOnSpace([spotify], spaces.at(-2));
   // MOVE TODOIST TO LAST SPACE
   await putWindowsVerticallyOnSpace([todoist], spaces.at(-1));
 
   // Ensure all spaces are evenly balanced in the end
-  await yabai.balanceSpace(spaces[0]);
+  await applySizeRatioToWindows([chrome, code, slack], [0.2, 0.6, 0.2]);
   await yabai.balanceSpace(spaces[1]);
 }

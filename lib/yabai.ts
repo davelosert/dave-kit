@@ -1,3 +1,5 @@
+type YabaiDirection = 'north' | 'east' | 'south' | 'west';
+type YabaiLayout = 'bsp' | 'float' | 'stack';
 type YabaiWindow = {
   id: number;
   app: string;
@@ -15,7 +17,7 @@ type YabaiWindow = {
 type YabaiSpace = {
   index: number;
   label: string;
-  type: 'bsp' | 'float' | 'stack';
+  type: YabaiLayout;
   windows: number[];
   'first-window': number;
   'last-window': number;
@@ -44,6 +46,12 @@ async function queryAllWindows(): Promise<YabaiWindow[]> {
   const allWindowsRaw = await $`yabai -m query --windows`;
   const allWindows = JSON.parse(allWindowsRaw.stdout);
   return allWindows;
+}
+
+async function queryWindow(window: YabaiWindow): Promise<YabaiWindow> {
+  const windowRaw = await $`yabai -m query --windows --window ${window.id}`;
+  window = JSON.parse(windowRaw.stdout);
+  return window;
 }
 
 async function queryAllWindowsOnSpace(spaceIndex: number): Promise<YabaiWindow[]> {
@@ -95,7 +103,7 @@ async function moveWindowToSpaceIfExists(window: YabaiWindow, space: YabaiSpace)
   }
 }
 
-async function setInsert(window: YabaiWindow, direction: 'north' | 'east' | 'south' | 'west') {
+async function setInsert(window: YabaiWindow, direction: YabaiDirection) {
   try {
     await $`yabai -m window ${window.id} --insert ${direction}`;
   } catch (e) {
@@ -139,15 +147,25 @@ async function ensureSpaceLayout(space: YabaiSpace, layout: 'bsp' | 'float' | 's
   if(space.type === layout) return;
 
   try {
-    await $`yabai -m space ${space} --layout ${layout}`;
+    await $`yabai -m space ${space.index} --layout ${layout}`;
   } catch (e) {
-    console.warn(`Could not set layout ${layout} on space ${space} due to error:`, e);
+    console.warn(`Could not set layout ${layout} on space ${space.index} due to error:`, e);
+  }
+}
+
+async function resizeWindow(window: YabaiWindow, resizeValue: string) {
+  try {
+    await $`yabai -m window ${window.id} --resize ${resizeValue}`;
+  } catch (e) {
+    console.warn(`Could not resize window ${window.id} to direction ${resizeValue} due to error:`, e);
   }
 }
 
 const yabai = {
   balanceSpace,
+  ensureSpaceLayout,
   queryAllWindows,
+  queryWindow,
   queryAllWindowsOnSpace,
   queryAllSpaces,
   queryAllDisplays,
@@ -157,10 +175,10 @@ const yabai = {
   findFocusedWindow,
   moveWindowToSpaceIfExists,
   moveWindowToDisplayIfExists,
-  ensureSpaceLayout,
+  resizeWindow,
   setInsert,
-  toggleSplit,
   swapWindows,
+  toggleSplit,
   warpWindow
 };
 
