@@ -24,7 +24,7 @@ type HydratedSpacePlan = SpacePlan & {
 
 type LayoutPlan = {
   spaces: Array<SpacePlan>,
-  unmanagedWindows?: (windows: YabaiWindow[], context: Context) => Promise<void>
+  nonePlannedWindows?: (windows: YabaiWindow[], context: Context) => Promise<void>
 }
 
 
@@ -50,8 +50,8 @@ async function applyLayout(layout: LayoutPlan) {
     };
   });
 
-  if(layout.unmanagedWindows) {
-    await layout.unmanagedWindows(remainingWindows, { spaces });
+  if(layout.nonePlannedWindows) {
+    await layout.nonePlannedWindows(remainingWindows, { spaces });
   }
 
   for(const spacePlan of hydratedSpaces) {
@@ -99,18 +99,17 @@ async function applyLayout(layout: LayoutPlan) {
     if(!isFirstWindow) {
       await yabai.swapWindows(existingWindows[0].id, space['first-window']);
     }
-    
-    
+
     let splitToggled = false;
     // First ensure all windows are splite vertically
     for(let window of existingWindows) {
       // Refresh the window information as, after a previous toggle, the split-type might be wrong
       if(splitToggled) {
+        // TODO: This state refresh is not  reflected later in the sortedWindows-Array and might cause trouble
         window = await yabai.queryWindow(window);
       }
 
       if(window['split-type'] !== 'vertical') {
-        console.log(`Splitting ${window.app} vertically`);
         await yabai.toggleSplit(window); 
         splitToggled = true;
       }
@@ -126,7 +125,6 @@ async function applyLayout(layout: LayoutPlan) {
     for(let i = 1; i < existingWindows.length; i++) {
       const previousWindow = existingWindows[i-1];
       const currentWindow = existingWindows[i];
-      console.log(`Moving ${currentWindow.app} to the right of ${previousWindow.app}`);
       await yabai.setInsert(previousWindow, 'east');
       await yabai.warpWindow(previousWindow, currentWindow);
     }
@@ -155,15 +153,12 @@ async function applyLayout(layout: LayoutPlan) {
         break;
       }
 
-      if(index !== 0) {
-        // Refetch the current window to get the most recent width after altering the first window
-        window = await yabai.queryWindow(window);
-      }
+      // Refetch the window to always get the actual current width (previous options might have changed it)
+      window = await yabai.queryWindow(window);
 
       const ratio = ratios[index];
       // This is indeed right, as resizing left needs a negative number to grow the window
       const targetWidth = window.frame.w - (totalWidth * ratio);
-      console.log(`Resizing ${window.app} with width ${window.frame.w} by ${targetWidth}`);
       await yabai.resizeWindow(window, `left:${targetWidth}:0`);
     }
   }

@@ -41,7 +41,7 @@ if(mode === 'work') {
           { spaceIndex: -2, layout: 'bsp', windows: [apps.spotify] },
           { spaceIndex: -1, layout: 'float', windows: [apps.todoist] },
         ],
-        unmanagedWindows: async (windows, context) => {
+        nonePlannedWindows: async (windows, context) => {
           for(const window of windows) {
             await yabai.moveWindowToSpaceIfExists(window, context.spaces[2]);
           }
@@ -59,7 +59,7 @@ if(mode === 'code') {
           { spaceIndex: -2, layout: 'bsp', windows: [apps.spotify] },
           { spaceIndex: -1, layout: 'float', windows: [apps.todoist] },
         ],
-        unmanagedWindows: async (windows, context) => {
+        nonePlannedWindows: async (windows, context) => {
           for(const window of windows) {
             await yabai.moveWindowToSpaceIfExists(window, context.spaces[2]);
           }
