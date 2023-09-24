@@ -8,6 +8,11 @@ import { yabai } from '../lib/yabai';
 
 const allWindows = await yabai.queryAllWindows();
 const todoistWindow = await yabai.findApp('Todoist', allWindows);
+
+if(!todoistWindow) {
+  throw new Error('Todoist window not found');
+}
+
 const focusedWindow = await yabai.findFocusedWindow(allWindows);
 
 const allDisplays = await yabai.queryAllDisplays();
